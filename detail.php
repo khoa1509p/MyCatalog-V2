@@ -1,26 +1,25 @@
 <?php
-// 1. DỮ LIỆU SÁCH 
-$books = [
-    ['id' => 1, 'name' => 'Đắc Nhân Tâm', 'author' => 'Dale Carnegie', 'category' => 'Kỹ năng sống', 'price' => 85000, 'rating' => 4.9],
-    ['id' => 2, 'name' => 'Harry Potter và Hòn đá Phù thủy', 'author' => 'J.K. Rowling', 'category' => 'Tiểu thuyết', 'price' => 120000, 'rating' => 4.8],
-    ['id' => 3, 'name' => 'Lập trình PHP cơ bản', 'author' => 'David Sklar', 'category' => 'Công nghệ', 'price' => 150000, 'rating' => 4.2],
-    ['id' => 4, 'name' => 'Nhà Giả Kim', 'author' => 'Paulo Coelho', 'category' => 'Tiểu thuyết', 'price' => 75000, 'rating' => 4.7],
-    ['id' => 5, 'name' => 'Clean Code', 'author' => 'Robert C. Martin', 'category' => 'Công nghệ', 'price' => 320000, 'rating' => 5.0],
-    ['id' => 6, 'name' => 'Tuổi Trẻ Đáng Giá Bao Nhiêu', 'author' => 'Rosie Nguyễn', 'category' => 'Kỹ năng sống', 'price' => 90000, 'rating' => 4.5],
-    ['id' => 7, 'name' => 'Sherlock Holmes', 'author' => 'Arthur Conan Doyle', 'category' => 'Trinh thám', 'price' => 110000, 'rating' => 4.6],
-    ['id' => 8, 'name' => 'Tâm Lý Học Tội Phạm', 'author' => 'T Stanton Samenow', 'category' => 'Trinh thám', 'price' => 135000, 'rating' => 4.3],
-];
+require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/config/database.php';
 
-// 2. LẤY ID TỪ URL VÀ TÌM SÁCH
+// Lấy ID từ URL
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-$selectedBook = null;
-
-foreach ($books as $book) {
-    if ($book['id'] === $id) {
-        $selectedBook = $book;
-        break; // dừng vòng lặp 
-    }
+if ($id <= 0) {
+    exit('ID sách không hợp lệ.');
 }
+
+// Tìm sách trong CSDL bằng prepared statement
+$stmt = $pdo->prepare('
+    SELECT b.*, c.name AS category_name 
+    FROM books b 
+    JOIN categories c ON c.id = b.category_id 
+    WHERE b.id = :id
+');
+$stmt->execute(['id' => $id]);
+$selectedBook = $stmt->fetch(PDO::FETCH_ASSOC);
+
+$pageTitle = 'Chi tiết Sách - My BookStore';
+require __DIR__ . '/includes/header.php'; 
 ?>
 
 <?php require 'includes/header.php'; ?>
@@ -35,7 +34,7 @@ foreach ($books as $book) {
     <div class="container">
         <?php if ($selectedBook): ?>
             <!-- NẾU TÌM THẤY SÁCH -->
-            <span class="badge-cat"><?= htmlspecialchars($selectedBook['category'], ENT_QUOTES, 'UTF-8') ?></span>
+            <span class="badge-cat"><?= htmlspecialchars($selectedBook['category_name'], ENT_QUOTES, 'UTF-8') ?></span>
             
             <h2><?= htmlspecialchars($selectedBook['name'], ENT_QUOTES, 'UTF-8') ?></h2>
             <p><strong>Tác giả:</strong> <?= htmlspecialchars($selectedBook['author'], ENT_QUOTES, 'UTF-8') ?></p>
